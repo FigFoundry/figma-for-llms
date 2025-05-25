@@ -1,8 +1,8 @@
 export default {
-  name: "Figma Plugin React",
-  id: "0000000000000000000",
+  name: "For LLMs",
+  id: "1508359885753658623",
   api: "1.0.0",
-  editorType: ["figma", "figjam"],
+  editorType: ["figma", "figjam", "slides"],
   main: "./canvas.js",
   ui: "./plugin.html",
   documentAccess: "dynamic-page",
