@@ -1,0 +1,117 @@
+/* DefaultView styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: var(--s-08);
+}
+
+header {
+  margin-bottom: var(--s-12);
+  
+  h1 {
+    font-size: var(--s-16);
+    font-weight: 600;
+    color: var(--figma-color-text);
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--s-16);
+  text-align: center;
+  
+  p {
+    color: var(--figma-color-text-secondary);
+    margin-top: var(--s-08);
+  }
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: var(--s-08);
+  
+  .tab {
+    flex: 1;
+    padding: var(--s-08) var(--s-12);
+    background: var(--figma-color-bg);
+    border: 1px solid var(--figma-color-border);
+    cursor: pointer;
+    font-size: var(--s-12);
+    
+    &:first-child {
+      border-radius: var(--s-04) 0 0 var(--s-04);
+    }
+    
+    &:last-child {
+      border-radius: 0 var(--s-04) var(--s-04) 0;
+    }
+    
+    &.active {
+      background: var(--figma-color-bg-brand);
+      color: var(--figma-color-text-onbrand);
+      border-color: var(--figma-color-border-brand);
+    }
+  }
+}
+
+.token-count {
+  font-size: var(--s-12);
+  color: var(--figma-color-text-secondary);
+  margin-bottom: var(--s-08);
+}
+
+.content-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--s-08);
+  
+  .expand-option {
+    display: flex;
+    align-items: center;
+    font-size: var(--s-12);
+    
+    input {
+      margin-right: var(--s-04);
+    }
+  }
+  
+  .copy-button {
+    padding: var(--s-04) var(--s-08);
+    background: var(--figma-color-bg-brand);
+    color: var(--figma-color-text-onbrand);
+    border-radius: var(--s-04);
+    font-size: var(--s-12);
+    border: none;
+    cursor: pointer;
+    
+    &:hover {
+      background: var(--figma-color-bg-brand-hover);
+    }
+  }
+}
+
+.json-container {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--figma-color-border);
+  border-radius: var(--s-04);
+  background: var(--figma-color-bg-secondary);
+  
+  .json-content {
+    font-family: var(--monospace);
+    font-size: var(--s-12);
+    line-height: 1.4;
+    padding: var(--s-08);
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
