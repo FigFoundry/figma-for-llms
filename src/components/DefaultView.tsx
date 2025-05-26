@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/DefaultView.scss';
 
+// SVG components for copy and success icons
+const CopyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="icon">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+  </svg>
+);
+
+const TickIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="icon">
+    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+  </svg>
+);
+
 // Function to calculate tokens more accurately
 function calculateTokens(text: string): number {
   if (!text) return 0;
@@ -26,6 +39,7 @@ const DefaultView = () => {
   const [selectionData, setSelectionData] = useState<any>(null);
   const [includeChildren, setIncludeChildren] = useState(true);
   const [activeTab, setActiveTab] = useState('pretty');
+  const [copied, setCopied] = useState(false);
   
   // Safely handle JSON data
   const [prettyJson, setPrettyJson] = useState('');
@@ -102,6 +116,14 @@ const DefaultView = () => {
     document.execCommand('copy');
     document.body.removeChild(textArea);
     
+    // Show success state
+    setCopied(true);
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+    
     // Show Figma native notification
     parent.postMessage({
       pluginMessage: {
@@ -111,14 +133,18 @@ const DefaultView = () => {
     }, '*');
   };
 
-  if (!selectionData) {
-    return (
-      <div className="empty-state">
-        <div className="icon">{ }</div>
-        <p>Select an element in Figma to view its raw data</p>
-      </div>
-    );
-  }
+  // Set placeholder JSON when no selection is made
+  useEffect(() => {
+    if (!selectionData) {
+      const placeholder = {
+        message: "Select an element in Figma to view its raw data"
+      };
+      setPrettyJson(JSON.stringify(placeholder, null, 2));
+      setMinifiedJson(JSON.stringify(placeholder));
+      setPrettyTokenCount(calculateTokens(JSON.stringify(placeholder, null, 2)));
+      setMinifiedTokenCount(calculateTokens(JSON.stringify(placeholder)));
+    }
+  }, [selectionData]);
 
   return (
     <div className="container">
@@ -151,16 +177,16 @@ const DefaultView = () => {
           />
           Include Children
         </label>
-        
-        <button 
-          className="copy-button" 
-          onClick={() => copyToClipboard(activeTab === 'pretty' ? prettyJson : minifiedJson)}
-        >
-          Copy {activeTab === 'pretty' ? 'Pretty' : 'Minified'} JSON
-        </button>
       </div>
       
       <div className="json-container">
+        <button 
+          className="copy-icon-button" 
+          onClick={() => copyToClipboard(activeTab === 'pretty' ? prettyJson : minifiedJson)}
+          title="Copy to clipboard"
+        >
+          {copied ? <TickIcon /> : <CopyIcon />}
+        </button>
         <pre className="json-content">
           {activeTab === 'pretty' ? prettyJson : minifiedJson}
         </pre>

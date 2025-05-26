@@ -104,6 +104,7 @@ header {
   border: 1px solid var(--figma-color-border);
   border-radius: var(--s-04);
   background: var(--figma-color-bg-secondary);
+  position: relative;
   
   .json-content {
     font-family: var(--monospace);
@@ -113,5 +114,32 @@ header {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+  }
+  
+  .copy-icon-button {
+    position: absolute;
+    top: var(--s-08);
+    right: var(--s-08);
+    width: 28px;
+    height: 28px;
+    border-radius: var(--s-04);
+    background: var(--figma-color-bg);
+    border: 1px solid var(--figma-color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    padding: 0;
+    
+    &:hover {
+      background: var(--figma-color-bg-hover);
+    }
+    
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke: var(--figma-color-text);
+    }
   }
 }
