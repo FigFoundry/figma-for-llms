@@ -71,8 +71,11 @@ const DefaultView = () => {
           ? selectionData[0] 
           : selectionData;
         
+        // Format pretty JSON with 2-space indentation
         const pretty = JSON.stringify(dataToShow, null, 2);
-        const minified = JSON.stringify(dataToShow);
+        
+        // Ensure maximum minification by removing any possible whitespace
+        const minified = JSON.stringify(dataToShow).replace(/\s+/g, '');
         
         setPrettyJson(pretty);
         setMinifiedJson(minified);
@@ -123,36 +126,83 @@ const DefaultView = () => {
   }, [includeChildren, selectionData]);
 
   const copyToClipboard = (text: string) => {
-    // Copy to clipboard
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    
-    // Show success state
-    setCopied(true);
-    
-    // Reset after 2 seconds
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-    
-    // Show Figma native notification
-    parent.postMessage({
-      pluginMessage: {
-        type: 'notify',
-        message: 'Copied to clipboard!'
+    try {
+      // Use the modern Clipboard API if available
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          // Show success state
+          setCopied(true);
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+          
+          // Show Figma native notification
+          parent.postMessage({
+            pluginMessage: {
+              type: 'notify',
+              message: 'Copied to clipboard!'
+            }
+          }, '*');
+        });
+      } else {
+        // Fallback to the older method for non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        // Make the textarea out of viewport
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          // Show success state
+          setCopied(true);
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+          
+          // Show Figma native notification
+          parent.postMessage({
+            pluginMessage: {
+              type: 'notify',
+              message: 'Copied to clipboard!'
+            }
+          }, '*');
+        } else {
+          console.error('Failed to copy text');
+          parent.postMessage({
+            pluginMessage: {
+              type: 'notify',
+              message: 'Failed to copy to clipboard'
+            }
+          }, '*');
+        }
       }
-    }, '*');
+    } catch (err) {
+      console.error('Copy to clipboard failed:', err);
+      parent.postMessage({
+        pluginMessage: {
+          type: 'notify',
+          message: 'Failed to copy to clipboard'
+        }
+      }, '*');
+    }
   };
 
   // Set placeholder JSON when no selection is made
   useEffect(() => {
     if (!selectionData) {
       const placeholder = {
-        message: "Select an element(s)"
+        message: "Select element(s)"
       };
       setPrettyJson(JSON.stringify(placeholder, null, 2));
       setMinifiedJson(JSON.stringify(placeholder));

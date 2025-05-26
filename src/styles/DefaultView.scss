@@ -183,33 +183,46 @@ header {
       line-height: .688rem !important;
       letter-spacing: .005em !important;
       max-width: 100%;
-    }
-    
-    /* Tab-specific styling */
-    .minified-view {
-      code, pre {
-        white-space: pre-wrap !important;
-        word-break: break-all !important;
+      
+      &:focus {
+        outline: none;
       }
     }
     
-    .pretty-view {
-      code, pre {
-        white-space: pre !important;
-        word-break: normal !important;
-      }
-    }
-    
-    /* Target syntax highlighter tokens */
-    span[class*="token"] {
-      font-family: var(--monospace) !important;
-      -webkit-font-smoothing: antialiased !important;
-      font-weight: 400 !important;
-      font-size: .688rem !important;
-      line-height: .688rem !important;
-      letter-spacing: .005em !important;
-    }
   }
+  
+}
+
+/* Apply selection styling globally for the JSON content */
+.json-content ::selection {
+  background-color: rgba(24, 145, 251, 0.3);
+  color: white;
+}
+
+/* Tab-specific styling */
+.minified-view {
+  code, pre {
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+  }
+}
+
+.pretty-view {
+  code, pre {
+    white-space: pre !important;
+    word-break: normal !important;
+  }
+}
+
+/* Target syntax highlighter tokens */
+.json-content span[class*="token"] {
+  font-family: var(--monospace) !important;
+  -webkit-font-smoothing: antialiased !important;
+  font-weight: 400 !important;
+  font-size: .688rem !important;
+  line-height: .688rem !important;
+  letter-spacing: .005em !important;
+}
   
   .copy-icon-button {
     position: absolute;
@@ -246,4 +259,4 @@ header {
       stroke: var(--figma-color-icon);
     }
   }
-}
+
