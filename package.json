@@ -1,7 +1,7 @@
 {
   "name": "figma-for-llms",
   "version": "0.0.1",
-  "description": "Figma for LLMs.",
+  "description": "Data for AI models",
   "type": "module",
   "main": "dist/canvas.js",
   "scripts": {

@@ -139,7 +139,7 @@ const DefaultView = () => {
   useEffect(() => {
     if (!selectionData) {
       const placeholder = {
-        message: "Select an element in Figma to view its raw data"
+        message: "Select an element to view its raw data"
       };
       setPrettyJson(JSON.stringify(placeholder, null, 2));
       setMinifiedJson(JSON.stringify(placeholder));
@@ -157,13 +157,13 @@ const DefaultView = () => {
           className={`tab ${activeTab === 'minified' ? 'active' : ''}`}
           onClick={() => setActiveTab('minified')}
         >
-          <span>Minified</span>
+          <span>Mini JSON</span>
         </button>
         <button 
           className={`tab ${activeTab === 'pretty' ? 'active' : ''}`}
           onClick={() => setActiveTab('pretty')}
         >
-          <span>Pretty</span>
+          <span>Pretty JSON</span>
         </button>
       </div>
       
