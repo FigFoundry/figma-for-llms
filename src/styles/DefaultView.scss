@@ -145,7 +145,7 @@ header {
 .json-container {
   flex: 1;
   overflow: auto;
-  border-radius: var(--s-04);
+  border-radius: var(--s-04) var(--s-04) var(--s-08) var(--s-08);
   background: #1e1e1e;
   position: relative;
   margin: 0 var(--s-04) var(--s-04) var(--s-04);
