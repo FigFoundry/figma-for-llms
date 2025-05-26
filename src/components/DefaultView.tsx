@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import '../styles/DefaultView.scss';
 
 // SVG components for copy and success icons
@@ -141,8 +143,9 @@ const DefaultView = () => {
       };
       setPrettyJson(JSON.stringify(placeholder, null, 2));
       setMinifiedJson(JSON.stringify(placeholder));
-      setPrettyTokenCount(calculateTokens(JSON.stringify(placeholder, null, 2)));
-      setMinifiedTokenCount(calculateTokens(JSON.stringify(placeholder)));
+      // Don't set token counts for placeholder
+      setPrettyTokenCount(0);
+      setMinifiedTokenCount(0);
     }
   }, [selectionData]);
 
@@ -164,10 +167,6 @@ const DefaultView = () => {
         </button>
       </div>
       
-      <div className="token-count">
-        {activeTab === 'pretty' ? `${prettyTokenCount} tokens` : `${minifiedTokenCount} tokens`}
-      </div>
-      
       <div className="content-options">
         <label className="expand-option" title="When checked, includes all nested children in the JSON output. Includes all levels of the hierarchy.">
           <input 
@@ -177,6 +176,12 @@ const DefaultView = () => {
           />
           Include Children
         </label>
+        
+        {(prettyTokenCount > 0 || minifiedTokenCount > 0) && (
+          <div className="token-count">
+            {activeTab === 'pretty' ? `${prettyTokenCount} tokens` : `${minifiedTokenCount} tokens`}
+          </div>
+        )}
       </div>
       
       <div className="json-container">
@@ -187,9 +192,27 @@ const DefaultView = () => {
         >
           {copied ? <TickIcon /> : <CopyIcon />}
         </button>
-        <pre className="json-content">
-          {activeTab === 'pretty' ? prettyJson : minifiedJson}
-        </pre>
+        <div className="json-content">
+          <SyntaxHighlighter
+            language="json"
+            style={vscDarkPlus}
+            customStyle={{
+              margin: 0,
+              padding: 'var(--s-08)',
+              background: 'transparent',
+              fontSize: 'var(--s-12)',
+              lineHeight: 1.4,
+              wordBreak: 'break-all',
+              whiteSpace: 'pre-wrap',
+              width: '100%',
+              overflow: 'hidden'
+            }}
+            wrapLines={true}
+            wrapLongLines={true}
+          >
+            {activeTab === 'pretty' ? prettyJson : minifiedJson}
+          </SyntaxHighlighter>
+        </div>
       </div>
     </div>
   );
