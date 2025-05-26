@@ -37,6 +37,19 @@ function calculateTokens(text: string): number {
   return Math.max(1, Math.round(wordCount * 1.3 + specialChars * 0.3 + numbers * 0.5));
 }
 
+// Format token count to show shorter versions for large numbers (1k, 1.5k, etc.)
+const formatTokenCount = (count: number): string => {
+  if (count < 1000) {
+    return count.toString();
+  } else if (count < 10000) {
+    // For 1000-9999, show as 1.5k format
+    return (Math.round(count / 100) / 10).toFixed(1) + 'k';
+  } else {
+    // For 10000+, show as 10k format without decimal
+    return Math.round(count / 1000) + 'k';
+  }
+};
+
 const DefaultView = () => {
   const [selectionData, setSelectionData] = useState<any>(null);
   const [includeChildren, setIncludeChildren] = useState(true);
@@ -139,7 +152,7 @@ const DefaultView = () => {
   useEffect(() => {
     if (!selectionData) {
       const placeholder = {
-        message: "Select an element to view its raw data"
+        message: "Select an element(s)"
       };
       setPrettyJson(JSON.stringify(placeholder, null, 2));
       setMinifiedJson(JSON.stringify(placeholder));
@@ -168,23 +181,27 @@ const DefaultView = () => {
       </div>
       
       <div className="content-options">
-        <label className="expand-option" title="When checked, includes all nested children in the JSON output. Includes all levels of the hierarchy.">
-          <input 
-            type="checkbox" 
-            checked={includeChildren} 
-            onChange={() => setIncludeChildren(!includeChildren)}
-          />
-          Include children
-        </label>
+        <div className="left-options">
+          <label className="expand-option" title="When checked, includes all nested children in the JSON output. Includes all levels of the hierarchy.">
+            <input 
+              type="checkbox" 
+              checked={includeChildren} 
+              onChange={() => setIncludeChildren(!includeChildren)}
+            />
+            Include children
+          </label>
+        </div>
         
         {(prettyTokenCount > 0 || minifiedTokenCount > 0) && (
           <div className="token-count">
-            {activeTab === 'pretty' ? `${prettyTokenCount} tokens` : `${minifiedTokenCount} tokens`}
+            {activeTab === 'pretty' 
+              ? `${formatTokenCount(prettyTokenCount)} tokens` 
+              : `${formatTokenCount(minifiedTokenCount)} tokens`}
           </div>
         )}
       </div>
       
-      <div className="json-container">
+      <div className={`json-container ${activeTab === 'pretty' ? 'pretty-view' : 'minified-view'}`}>
         <button 
           className="copy-icon-button" 
           onClick={() => copyToClipboard(activeTab === 'pretty' ? prettyJson : minifiedJson)}
@@ -195,20 +212,59 @@ const DefaultView = () => {
         <div className="json-content">
           <SyntaxHighlighter
             language="json"
-            style={vscDarkPlus}
+            style={{
+              ...vscDarkPlus,
+              'code[class*="language-"]': {
+                ...vscDarkPlus['code[class*="language-"]'],
+                color: 'var(--figma-color-text)',
+                fontFamily: 'var(--monospace)',
+                WebkitFontSmoothing: 'antialiased',
+                fontWeight: 400,
+                fontSize: '.688rem',
+                lineHeight: '.688rem',
+                letterSpacing: '.005em'
+              },
+              'pre[class*="language-"]': {
+                ...vscDarkPlus['pre[class*="language-"]'],
+                color: 'var(--figma-color-text)',
+                fontFamily: 'var(--monospace)',
+                WebkitFontSmoothing: 'antialiased',
+                fontWeight: 400,
+                fontSize: '.688rem',
+                lineHeight: '.688rem',
+                letterSpacing: '.005em'
+              }
+            }}
             customStyle={{
               margin: 0,
               padding: 'var(--s-08)',
               background: 'transparent',
-              fontSize: 'var(--s-12)',
-              lineHeight: 1.4,
-              wordBreak: 'break-all',
-              whiteSpace: 'pre-wrap',
+              color: 'var(--figma-color-text)',
+              fontFamily: 'var(--monospace)',
+              WebkitFontSmoothing: 'antialiased',
+              fontWeight: 400,
+              fontSize: '.688rem',
+              lineHeight: '.688rem',
+              letterSpacing: '.005em',
+              wordBreak: activeTab === 'minified' ? 'break-all' : 'normal',
+              whiteSpace: activeTab === 'minified' ? 'pre-wrap' : 'pre',
               width: '100%',
-              overflow: 'hidden'
+              overflowX: activeTab === 'pretty' ? 'auto' : 'hidden',
+              overflowY: 'auto'
             }}
-            wrapLines={true}
-            wrapLongLines={true}
+            codeTagProps={{
+              style: {
+                color: 'var(--figma-color-text)',
+                fontFamily: 'var(--monospace)',
+                WebkitFontSmoothing: 'antialiased',
+                fontWeight: 400,
+                fontSize: '.688rem',
+                lineHeight: '.688rem',
+                letterSpacing: '.005em'
+              }
+            }}
+            wrapLines={activeTab === 'minified'}
+            wrapLongLines={activeTab === 'minified'}
           >
             {activeTab === 'pretty' ? prettyJson : minifiedJson}
           </SyntaxHighlighter>
