@@ -40,7 +40,7 @@ function calculateTokens(text: string): number {
 const DefaultView = () => {
   const [selectionData, setSelectionData] = useState<any>(null);
   const [includeChildren, setIncludeChildren] = useState(true);
-  const [activeTab, setActiveTab] = useState('pretty');
+  const [activeTab, setActiveTab] = useState('minified');
   const [copied, setCopied] = useState(false);
   
   // Safely handle JSON data
@@ -154,16 +154,16 @@ const DefaultView = () => {
       
       <div className="tabs">
         <button 
-          className={`tab ${activeTab === 'pretty' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pretty')}
-        >
-          <span>Pretty JSON</span>
-        </button>
-        <button 
           className={`tab ${activeTab === 'minified' ? 'active' : ''}`}
           onClick={() => setActiveTab('minified')}
         >
-          <span>Minified JSON</span>
+          <span>Minified</span>
+        </button>
+        <button 
+          className={`tab ${activeTab === 'pretty' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pretty')}
+        >
+          <span>Pretty</span>
         </button>
       </div>
       
@@ -174,7 +174,7 @@ const DefaultView = () => {
             checked={includeChildren} 
             onChange={() => setIncludeChildren(!includeChildren)}
           />
-          Include Children
+          Include children
         </label>
         
         {(prettyTokenCount > 0 || minifiedTokenCount > 0) && (
