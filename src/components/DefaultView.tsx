@@ -37,6 +37,19 @@ function calculateTokens(text: string): number {
   return Math.max(1, Math.round(wordCount * 1.3 + specialChars * 0.3 + numbers * 0.5));
 }
 
+// Format token count to show shorter versions for large numbers (1k, 1.5k, etc.)
+const formatTokenCount = (count: number): string => {
+  if (count < 1000) {
+    return count.toString();
+  } else if (count < 10000) {
+    // For 1000-9999, show as 1.5k format
+    return (Math.round(count / 100) / 10).toFixed(1) + 'k';
+  } else {
+    // For 10000+, show as 10k format without decimal
+    return Math.round(count / 1000) + 'k';
+  }
+};
+
 const DefaultView = () => {
   const [selectionData, setSelectionData] = useState<any>(null);
   const [includeChildren, setIncludeChildren] = useState(true);
@@ -58,8 +71,11 @@ const DefaultView = () => {
           ? selectionData[0] 
           : selectionData;
         
+        // Format pretty JSON with 2-space indentation
         const pretty = JSON.stringify(dataToShow, null, 2);
-        const minified = JSON.stringify(dataToShow);
+        
+        // Ensure maximum minification by removing any possible whitespace
+        const minified = JSON.stringify(dataToShow).replace(/\s+/g, '');
         
         setPrettyJson(pretty);
         setMinifiedJson(minified);
@@ -110,36 +126,83 @@ const DefaultView = () => {
   }, [includeChildren, selectionData]);
 
   const copyToClipboard = (text: string) => {
-    // Copy to clipboard
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    
-    // Show success state
-    setCopied(true);
-    
-    // Reset after 2 seconds
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-    
-    // Show Figma native notification
-    parent.postMessage({
-      pluginMessage: {
-        type: 'notify',
-        message: 'Copied to clipboard!'
+    try {
+      // Use the modern Clipboard API if available
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          // Show success state
+          setCopied(true);
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+          
+          // Show Figma native notification
+          parent.postMessage({
+            pluginMessage: {
+              type: 'notify',
+              message: 'Copied to clipboard!'
+            }
+          }, '*');
+        });
+      } else {
+        // Fallback to the older method for non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        // Make the textarea out of viewport
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          // Show success state
+          setCopied(true);
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+          
+          // Show Figma native notification
+          parent.postMessage({
+            pluginMessage: {
+              type: 'notify',
+              message: 'Copied to clipboard!'
+            }
+          }, '*');
+        } else {
+          console.error('Failed to copy text');
+          parent.postMessage({
+            pluginMessage: {
+              type: 'notify',
+              message: 'Failed to copy to clipboard'
+            }
+          }, '*');
+        }
       }
-    }, '*');
+    } catch (err) {
+      console.error('Copy to clipboard failed:', err);
+      parent.postMessage({
+        pluginMessage: {
+          type: 'notify',
+          message: 'Failed to copy to clipboard'
+        }
+      }, '*');
+    }
   };
 
   // Set placeholder JSON when no selection is made
   useEffect(() => {
     if (!selectionData) {
       const placeholder = {
-        message: "Select an element in Figma to view its raw data"
+        message: "Select element(s)"
       };
       setPrettyJson(JSON.stringify(placeholder, null, 2));
       setMinifiedJson(JSON.stringify(placeholder));
@@ -157,34 +220,38 @@ const DefaultView = () => {
           className={`tab ${activeTab === 'minified' ? 'active' : ''}`}
           onClick={() => setActiveTab('minified')}
         >
-          <span>Minified</span>
+          <span>Mini JSON</span>
         </button>
         <button 
           className={`tab ${activeTab === 'pretty' ? 'active' : ''}`}
           onClick={() => setActiveTab('pretty')}
         >
-          <span>Pretty</span>
+          <span>Pretty JSON</span>
         </button>
       </div>
       
       <div className="content-options">
-        <label className="expand-option" title="When checked, includes all nested children in the JSON output. Includes all levels of the hierarchy.">
-          <input 
-            type="checkbox" 
-            checked={includeChildren} 
-            onChange={() => setIncludeChildren(!includeChildren)}
-          />
-          Include children
-        </label>
+        <div className="left-options">
+          <label className="expand-option" title="When checked, includes all nested children in the JSON output. Includes all levels of the hierarchy.">
+            <input 
+              type="checkbox" 
+              checked={includeChildren} 
+              onChange={() => setIncludeChildren(!includeChildren)}
+            />
+            Include children
+          </label>
+        </div>
         
         {(prettyTokenCount > 0 || minifiedTokenCount > 0) && (
           <div className="token-count">
-            {activeTab === 'pretty' ? `${prettyTokenCount} tokens` : `${minifiedTokenCount} tokens`}
+            {activeTab === 'pretty' 
+              ? `${formatTokenCount(prettyTokenCount)} tokens` 
+              : `${formatTokenCount(minifiedTokenCount)} tokens`}
           </div>
         )}
       </div>
       
-      <div className="json-container">
+      <div className={`json-container ${activeTab === 'pretty' ? 'pretty-view' : 'minified-view'}`}>
         <button 
           className="copy-icon-button" 
           onClick={() => copyToClipboard(activeTab === 'pretty' ? prettyJson : minifiedJson)}
@@ -195,20 +262,59 @@ const DefaultView = () => {
         <div className="json-content">
           <SyntaxHighlighter
             language="json"
-            style={vscDarkPlus}
+            style={{
+              ...vscDarkPlus,
+              'code[class*="language-"]': {
+                ...vscDarkPlus['code[class*="language-"]'],
+                color: 'var(--figma-color-text)',
+                fontFamily: 'var(--monospace)',
+                WebkitFontSmoothing: 'antialiased',
+                fontWeight: 400,
+                fontSize: '.688rem',
+                lineHeight: '.688rem',
+                letterSpacing: '.005em'
+              },
+              'pre[class*="language-"]': {
+                ...vscDarkPlus['pre[class*="language-"]'],
+                color: 'var(--figma-color-text)',
+                fontFamily: 'var(--monospace)',
+                WebkitFontSmoothing: 'antialiased',
+                fontWeight: 400,
+                fontSize: '.688rem',
+                lineHeight: '.688rem',
+                letterSpacing: '.005em'
+              }
+            }}
             customStyle={{
               margin: 0,
               padding: 'var(--s-08)',
               background: 'transparent',
-              fontSize: 'var(--s-12)',
-              lineHeight: 1.4,
-              wordBreak: 'break-all',
-              whiteSpace: 'pre-wrap',
+              color: 'var(--figma-color-text)',
+              fontFamily: 'var(--monospace)',
+              WebkitFontSmoothing: 'antialiased',
+              fontWeight: 400,
+              fontSize: '.688rem',
+              lineHeight: '.688rem',
+              letterSpacing: '.005em',
+              wordBreak: activeTab === 'minified' ? 'break-all' : 'normal',
+              whiteSpace: activeTab === 'minified' ? 'pre-wrap' : 'pre',
               width: '100%',
-              overflow: 'hidden'
+              overflowX: activeTab === 'pretty' ? 'auto' : 'hidden',
+              overflowY: 'auto'
             }}
-            wrapLines={true}
-            wrapLongLines={true}
+            codeTagProps={{
+              style: {
+                color: 'var(--figma-color-text)',
+                fontFamily: 'var(--monospace)',
+                WebkitFontSmoothing: 'antialiased',
+                fontWeight: 400,
+                fontSize: '.688rem',
+                lineHeight: '.688rem',
+                letterSpacing: '.005em'
+              }
+            }}
+            wrapLines={activeTab === 'minified'}
+            wrapLongLines={activeTab === 'minified'}
           >
             {activeTab === 'pretty' ? prettyJson : minifiedJson}
           </SyntaxHighlighter>
