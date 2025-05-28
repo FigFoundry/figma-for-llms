@@ -64,5 +64,10 @@
     "typescript": "5.8.3",
     "vite-plugin-generate-file": "0.3.1",
     "vite-plugin-singlefile": "2.2.0"
+  },
+  "overrides": {
+    "react-syntax-highlighter": {
+      "prismjs": "1.30.0"
+    }
   }
 }
